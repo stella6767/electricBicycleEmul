@@ -18,7 +18,9 @@ public class Emul {
     @PostConstruct
     public void emulStart() throws IOException {
 
-        socketService.socketServer();
+        //socketService.socketServer();
+        socketService.socketClient();
     }
+
 
 }
