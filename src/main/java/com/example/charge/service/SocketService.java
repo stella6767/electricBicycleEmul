@@ -86,52 +86,74 @@ public class SocketService {
         byte[] readByteArr;
         ByteBuffer readBuf = ByteBuffer.allocate(3);
         String response = "";
-        int bytesRead = 0;
+        //int bytesRead = 0;
 
         sb.delete(0, sb.length()); // 초기화
 
         if (schn.isConnected()) {
-            log.info("Socket channel이 정상적으로 연결되었습니다.");
+            log.info("Socket channel이 정상적으로 연결되었고 data를 읽습니다.");
 
-            try {
-                bytesRead = schn.read(readBuf); // read into buffer. 일단은 버퍼 초과 신경쓰지 않고
-                log.info("bytesRead1: " + bytesRead);
-            } catch (Exception e) {
-                schn.close();
-            }
+            int bytesRead = schn.read(readBuf); // read into buffer. 일단은 버퍼 초과 신경쓰지 않고
+            while (bytesRead != -1) {// 만약 소켓채널을 통해 buffer에 데이터를 받아왔으면
 
-
-            while (bytesRead > 0) {// 만약 소켓채널을 통해 buffer에 데이터를 받아왔으면
                 readBuf.flip(); // make buffer ready for read
-                readByteArr = new byte[readBuf.remaining()];
+                // 10240로 정의한 buffer의 크기를 실제 데이터의 크기로 flip() 함
 
-                log.info(String.valueOf(readBuf.remaining()));
-                log.info(String.valueOf(readBuf.capacity()));
-                log.info(String.valueOf(readBuf.position()));
-                readBuf.get(readByteArr);
-
-                response = response + new String(readByteArr, Charset.forName("UTF-8"));
-
-                try {
-                    bytesRead = schn.read(readBuf);
-                    readBuf.clear();
-                } catch (Exception e) {
-                    e.printStackTrace();
-
+                while (readBuf.hasRemaining()) {
+                    System.out.print((char) readBuf.get()); // read 1 byte at a time
+                    //response = response + String.valueOf(((char) readBuf.get()));
                 }
+
+                //log.info("읽기 끝 " + bytesRead);
+                // logger.debug("hl7Response data1: "+hl7Response);
+                readBuf.clear(); //make buffer ready for writing
+                bytesRead = schn.read(readBuf);
+
             }
+
             log.info("response: " + response);
 
-        } else if (!schn.isConnected()) {
-            log.info("Socket channel이 연결이 끊어졌습니다.");
+
+//
+//
+//            try {
+//                bytesRead = schn.read(readBuf); // read into buffer. 일단은 버퍼 초과 신경쓰지 않고
+//                log.info("bytesRead1: " + bytesRead);
+//            } catch (Exception e) {
+//                schn.close();
+//            }
+//
+//
+//            while (bytesRead > 0) {// 만약 소켓채널을 통해 buffer에 데이터를 받아왔으면
+//                readBuf.flip(); // make buffer ready for read
+//                readByteArr = new byte[readBuf.remaining()];
+//
+//                log.info(String.valueOf(readBuf.remaining()));
+//                log.info(String.valueOf(readBuf.capacity()));
+//                log.info(String.valueOf(readBuf.position()));
+//                readBuf.get(readByteArr);
+//
+//                response = response + new String(readByteArr, Charset.forName("UTF-8"));
+//
+//                try {
+//                    bytesRead = schn.read(readBuf);
+//                    readBuf.clear();
+//                } catch (Exception e) {
+//                    e.printStackTrace();
+//
+//                }
+//            }
+//            log.info("response: " + response);
+//
+//        } else if (!schn.isConnected()) {
+//            log.info("Socket channel이 연결이 끊어졌습니다.");
+//        }
+
         }
 
     }
 
 
-    public void test() {
 
-        log.info("삐져나옴");
-    }
 
 }
