@@ -24,7 +24,7 @@ public class Emul {
         //socketService.socketServer();
         CompletableFuture<SocketChannel> completableFuture = socketService.socketClient();
         SocketChannel socketClient = completableFuture.get(); //일단은 그냥 blocking 시켜서 보내자
-        socketService.readSocketData2(socketClient);
+        socketService.readSocketData(socketClient);
     }
 
 

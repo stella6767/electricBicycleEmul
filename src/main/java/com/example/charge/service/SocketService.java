@@ -1,6 +1,7 @@
 package com.example.charge.service;
 
 import com.example.charge.config.GlobalVar;
+import com.example.charge.utills.Common;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.json.simple.JSONObject;
@@ -25,21 +26,18 @@ public class SocketService {
 
     private final GlobalVar globalVar;
 
-    //    public SocketChannel schn = null;
-//    StringBuffer sb = new StringBuffer();
-//    Charset charset = Charset.forName("UTF-8");
     JSONParser parser = new JSONParser();
     JSONObject obj;
-    SocketChannel schn = null;
+
 
     @Async
     public CompletableFuture<SocketChannel> socketClient() throws IOException {
-
+        SocketChannel schn = null;
         schn = SocketChannel.open();
         try {
             schn.connect(new InetSocketAddress(globalVar.ip, globalVar.socketPort));
             schn.configureBlocking(true);// Non-Blocking I/O
-            log.debug("socketChannel connected to port 5051");
+            log.debug("socketChannel connected to port 5053");
         } catch (Exception e2) {
             log.debug("connected refused!!!");
         }
@@ -48,105 +46,9 @@ public class SocketService {
     }
 
 
-    @Async //비동기로 처리해야지만
-    public void readSocketData2(SocketChannel schn) throws IOException {
 
-
-        log.debug("들어옴? ");
-        byte[] readByteArr;
-
-        String response = "";
-
-        boolean bConnect = true;
-        String hl7Response = "";
-        ByteBuffer readBuf = ByteBuffer.allocate(10240);
-
-        if (schn.isConnected()) {
-            log.debug("Socket channel이 정상적으로 연결되었습니다.");
-
-            log.debug("1111");
-            int bytesRead = schn.read(readBuf); // read into buffer. 일단은 버퍼 초과 신경쓰지 않고
-            while (bytesRead != -1) {// 만약 소켓채널을 통해 buffer에 데이터를
-
-                readBuf.flip(); // make buffer ready for read
-                // 10240로 정의한 buffer의 크기를 실제 데이터의 크기로 flip() 함
-
-                while (readBuf.hasRemaining()) {
-                    // System.out.print((char) readBuf.get()); // read 1 byte at a time
-                    hl7Response = hl7Response + String.valueOf(((char) readBuf.get()));
-                }
-
-//                    log.debug("??????????????: " + hl7Response);
-//                    log.debug("limit까지의 값: " + readBuf.remaining());
-//                    log.debug("capacity: " + readBuf.capacity());
-//                    log.debug("position: " + readBuf.position());
-                readBuf.clear(); //make buffer ready for writing
-
-//                    readBuf.compact();
-//                    log.debug("limit까지의 값 2: " + readBuf.remaining());
-//                    log.debug("capacity 2: " + readBuf.capacity());
-//                    log.debug("position 2: " + readBuf.position());
-//
-//                    log.debug("limit까지의 값 3: " + readBuf.remaining());
-//                    log.debug("capacity 3: " + readBuf.capacity());
-//                    log.debug("position 3: " + readBuf.position());
-//                    if(readBuf.position() == 0){
-//                        break;
-//                    }
-
-                bytesRead = schn.read(readBuf);
-
-            }
-            log.debug("-------------- 응답 hl7Response ----------------");
-            log.debug(hl7Response);
-
-
-        } else if (!schn.isConnected()) {
-            log.debug("Socket channel이 연결이 끊어졌습니다.");
-        }
-    }
-
-
-    public void readSocketData(SocketChannel schn) throws IOException {
-        ByteBuffer readBuf = ByteBuffer.allocate(10240);
-
-        String response = "";
-
-        if (schn.isConnected()) {
-            log.debug("Socket channel이 정상적으로 연결되었고 data를 읽습니다.");
-
-            int bytesRead = schn.read(readBuf); // read into buffer. 일단은 버퍼 초과 신경쓰지 않고
-            while (bytesRead != -1) {// 만약 소켓채널을 통해 buffer에 데이터를 받아왔으면
-
-                readBuf.flip(); // make buffer ready for read
-                log.debug("limit까지의 값: " + readBuf.remaining());
-                log.debug("capacity: " + readBuf.capacity());
-                log.debug("position: " + readBuf.position());
-
-
-                while (readBuf.hasRemaining()) {
-                    //System.out.print((char) readBuf.get()); // read 1 byte at a time
-                    response = response + String.valueOf(((char) readBuf.get()));
-                }
-
-                readBuf.clear(); //make buffer ready for writing
-                log.debug("response: " + response);
-                try {
-                    clsfyReq(response);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-
-
-                bytesRead = schn.read(readBuf); //여기서 읽을 때까지 블락킹이 걸리므로 while문 못 빠져나가는 건 당연하다.
-
-            }
-        }
-
-    }
-
-
-    private void socketWork(SocketChannel schn) {
+    @Async
+    public void readSocketData(SocketChannel schn) {
 
         boolean isRunning = true; // 일단 추가, socketWork 중지할지 안 중지할지
 
@@ -187,14 +89,7 @@ public class SocketService {
                     while (byteCount > 0) {
 
                         readBuf.flip(); // 입력된 데이터를 읽기 위해 read-mode로 바꿈, positon이 데이터의 시작인 0으로 이동
-
                         readByteArr = new byte[readBuf.remaining()]; // 현재 위치에서 limit까지 읽어드릴 수 있는 데이터의 개수를 리턴
-
-                        // 일단 확인
-                        // logger.debug("limit까지의 값: " + readBuf.remaining());
-                        // logger.debug("capacity: " + readBuf.capacity());
-                        // logger.debug("position: " + readBuf.position());
-
                         readBuf.get(readByteArr); // 데이터 읽기
 
                         result = result + new String(readByteArr, Charset.forName("UTF-8"));
@@ -216,12 +111,18 @@ public class SocketService {
                         // #ETX# 단위로 루프
                         while (!result.equals("") && bEtxEnd) {
 
+                            globalVar.globalSocket.put("schn", schn);
                             clsfyReq(result);
+                            result = "";
+                            bEtxEnd = false;
+                            readBuf.clear();
+
                         }
 
                     } // #ETX# 단위로 루프
                 } // byteCount > 0
 
+                log.debug("소켓 닫기");
                 schn.close(); // 소켓 닫기
 
             } catch (Exception e) {
@@ -236,7 +137,6 @@ public class SocketService {
 
         log.debug("분류" + response);
 
-
         try {
             obj = (JSONObject) parser.parse(response);
             String opCode = String.valueOf(obj.get("opcode"));
@@ -248,6 +148,7 @@ public class SocketService {
                     break;
 
                 case "return":
+
                     break;
 
             }
@@ -264,11 +165,39 @@ public class SocketService {
 
         obj = (JSONObject) parser.parse(response);
         String chargerid = String.valueOf(obj.get("chargerid"));
+        String mobilityid = String.valueOf(obj.get("mobilityid"));
 
+        log.debug("대여 요청되었습니다. " + chargerid +" 의 " +mobilityid +"unLock");
 
-        log.debug("대여 요청되었습니다. UnLock: " + chargerid);
-
+        String rentalResponse = "대여 요청했습니다. chargerid: " + chargerid +" 의  mobilityid: " +mobilityid +" 가 unLock";
+        writeSocket(rentalResponse);
     }
 
+
+
+    public void writeSocket(String response){
+
+        log.debug("station에게 buffer로 응답합니다..");
+
+        ByteBuffer writBuf = ByteBuffer.allocate(10240);
+
+        SocketChannel schn = globalVar.globalSocket.get("schn");
+
+        writBuf.flip();
+        writBuf = Common.str_to_bb("대여 요청되었습니다. UnLock: " + response);
+        try {
+            schn.write(writBuf);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        writBuf.clear();
+    }
+
+
+    public void returnResp(){
+
+
+
+    }
 
 }
