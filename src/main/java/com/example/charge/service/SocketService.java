@@ -167,10 +167,10 @@ public class SocketService {
         String chargerid = String.valueOf(obj.get("chargerid"));
         String mobilityid = String.valueOf(obj.get("mobilityid"));
 
-        log.debug("대여 요청되었습니다. " + chargerid +" 의 " +mobilityid +"unLock");
-
-        String rentalResponse = "대여 요청했습니다. chargerid: " + chargerid +" 의  mobilityid: " +mobilityid +" 가 unLock";
+        String rentalResponse = "대여 요청되었습니다. chargerid: " + chargerid +" 의  mobilityid: " +mobilityid +" 가 unLock";
         writeSocket(rentalResponse);
+
+
     }
 
 
@@ -178,13 +178,14 @@ public class SocketService {
     public void writeSocket(String response){
 
         log.debug("station에게 buffer로 응답합니다..");
+        log.debug(response);
 
         ByteBuffer writBuf = ByteBuffer.allocate(10240);
 
         SocketChannel schn = globalVar.globalSocket.get("schn");
 
         writBuf.flip();
-        writBuf = Common.str_to_bb("대여 요청되었습니다. UnLock: " + response);
+        writBuf = Common.str_to_bb(response);
         try {
             schn.write(writBuf);
         } catch (IOException e) {
