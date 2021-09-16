@@ -8,7 +8,6 @@ import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 import org.springframework.scheduling.annotation.Async;
-import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
@@ -16,10 +15,8 @@ import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
 import java.nio.charset.Charset;
-import java.util.concurrent.CompletableFuture;
 
 @Slf4j
-@EnableAsync
 @RequiredArgsConstructor
 @Service
 public class SocketService {
@@ -29,8 +26,17 @@ public class SocketService {
     JSONParser parser = new JSONParser();
     JSONObject obj;
 
+
     @Async
-    public CompletableFuture<SocketChannel> socketClient() throws IOException {
+    public void test(){
+        log.debug("이건 실행되나");
+    }
+
+
+    //@Async
+    public SocketChannel socketClient() throws IOException {
+
+        log.debug("socketClient create");
         SocketChannel schn = null;
         schn = SocketChannel.open();
         try {
@@ -41,14 +47,17 @@ public class SocketService {
         } catch (Exception e2) {
             log.debug("connected refused!!!");
         }
-        return CompletableFuture.completedFuture(schn); // 다른 대안 탐색중..
+        return schn; // 다른 대안 탐색중..
 
     }
 
     //@Async
-    public void readSocketData(SocketChannel schn) {
+    public void readSocketData() throws IOException {
 
         //SocketChannel schn = globalVar.globalSocket.get("schn");
+
+        SocketChannel schn = socketClient();
+
 
         boolean isRunning = true; // 일단 추가, socketWork 중지할지 안 중지할지
 

@@ -5,7 +5,6 @@ import com.example.charge.utills.Common;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Async;
-import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.stereotype.Service;
 
 import java.io.BufferedReader;
@@ -18,7 +17,6 @@ import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
 
 @Slf4j
-@EnableAsync
 @Service
 public class DockingService {
 
@@ -32,6 +30,7 @@ public class DockingService {
         this.globalVar = globalVar;
         this.serverSocket = new ServerSocket(12222);
     }
+
 
     @SneakyThrows
     @Async
