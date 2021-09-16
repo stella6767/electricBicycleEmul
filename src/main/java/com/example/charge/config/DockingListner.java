@@ -1,5 +1,6 @@
 package com.example.charge.config;
 
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.BufferedReader;
@@ -24,6 +25,7 @@ public class TelnetListner extends Thread {
         }
     }
 
+    @SneakyThrows
     public void run() {
 
         log.debug(this.getName() + " 실행");
@@ -40,20 +42,17 @@ public class TelnetListner extends Thread {
 
                 while ((strOut = reader.readLine()) != null) {
                     System.out.println("클라이언트 메시지: " + strOut);
+                    writer.println(strOut);
+                    writer.flush();
                 }
 
                 log.debug("2");
                 reader.close();
+                writer.close();
 
             } catch (Exception e) {
                 log.debug("error: " + e.getMessage());
-//                log.debug("3");
-//                try {
-//                    socket.close();
-//                } catch (IOException ex) {
-//                    ex.printStackTrace();
-//                }
-//                isConnected= false;
+                socket.close();
             }
 
         } //while문 끝
