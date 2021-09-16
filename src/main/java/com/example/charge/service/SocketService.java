@@ -29,7 +29,6 @@ public class SocketService {
     JSONParser parser = new JSONParser();
     JSONObject obj;
 
-
     @Async
     public CompletableFuture<SocketChannel> socketClient() throws IOException {
         SocketChannel schn = null;
@@ -38,21 +37,22 @@ public class SocketService {
             schn.connect(new InetSocketAddress(globalVar.ip, globalVar.socketPort));
             schn.configureBlocking(true);// Non-Blocking I/O
             log.debug("socketChannel connected to port 5053");
+
         } catch (Exception e2) {
             log.debug("connected refused!!!");
         }
+        return CompletableFuture.completedFuture(schn); // 다른 대안 탐색중..
 
-        return CompletableFuture.completedFuture(schn);
     }
 
-
-
-    @Async
+    //@Async
     public void readSocketData(SocketChannel schn) {
+
+        //SocketChannel schn = globalVar.globalSocket.get("schn");
 
         boolean isRunning = true; // 일단 추가, socketWork 중지할지 안 중지할지
 
-        while (isRunning) {
+        while (isRunning && schn.isConnected()) {
 
             try {
                 long lThId = Thread.currentThread().getId();

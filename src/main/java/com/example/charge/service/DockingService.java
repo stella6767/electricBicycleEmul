@@ -1,8 +1,12 @@
-package com.example.charge.config;
+package com.example.charge.service;
 
+import com.example.charge.config.GlobalVar;
+import com.example.charge.utills.Common;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Async;
+import org.springframework.scheduling.annotation.EnableAsync;
+import org.springframework.stereotype.Service;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -10,34 +14,30 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
 
-
 @Slf4j
-public class DockingListner extends Thread {
+@EnableAsync
+@Service
+public class DockingService {
 
-    @Autowired
     private GlobalVar globalVar;
-
     public ServerSocket serverSocket = null;
     public Socket socket = null;
 
-    SocketChannel stationSchn = null;
-
-    public DockingListner(String name) {
-        this.setName(name);
-        try {
-            log.debug("ServerSocker create");
-            serverSocket = new ServerSocket(12222);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+    @SneakyThrows
+    public DockingService(GlobalVar globalVar) {
+        log.debug("docking server socket create");
+        this.globalVar = globalVar;
+        this.serverSocket = new ServerSocket(12222);
     }
 
     @SneakyThrows
-    public void run() {
+    @Async
+    public void dockingListen()  { //SocketChannel stationSchn
 
-        log.debug(this.getName() + " 실행");
+        log.debug("docking listen");
         boolean isConnected = true;
 
         while (isConnected) {
@@ -49,12 +49,14 @@ public class DockingListner extends Thread {
                 PrintWriter writer = new PrintWriter(socket.getOutputStream());
                 String strOut = "";
 
-                SocketChannel schn = globalVar.globalSocket.get("schn");
+                //SocketChannel schn = globalVar.globalSocket.get("schn");
 
                 while ((strOut = reader.readLine()) != null) {
                     System.out.println("클라이언트 메시지: " + strOut);
                     writer.println(strOut);
                     writer.flush();
+
+                    //writeDockingOrNot(stationSchn, strOut);
                 }
 
                 log.debug("2");
@@ -68,5 +70,27 @@ public class DockingListner extends Thread {
 
         } //while문 끝
         log.debug("4");
+
+
     }
+
+
+    //docking 여부 staion에게 답장
+    public void writeDockingOrNot(SocketChannel schn, String response){
+
+        log.debug("station에게 buffer로 응답합니다..");
+        log.debug(response);
+        ByteBuffer writBuf = ByteBuffer.allocate(10240);
+
+        writBuf.flip();
+        writBuf = Common.str_to_bb(response);
+        try {
+            schn.write(writBuf);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        writBuf.clear();
+    }
+
+
 }
