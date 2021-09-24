@@ -8,6 +8,7 @@ import java.nio.charset.CharsetEncoder;
 
 public class Common {
 
+
     public static ByteBuffer str_to_bb(String msg) {
         Charset charset = Charset.forName("UTF-8");
         CharsetEncoder encoder = charset.newEncoder();

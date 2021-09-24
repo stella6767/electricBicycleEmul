@@ -34,15 +34,6 @@ public class SocketService {
     JSONObject obj;
 
 
-    @Async
-    public void test(){
-        log.debug("이건 실행되나");
-
-
-
-    }
-
-
     //@Async
     public SocketChannel socketClient() throws IOException { //여기서 어떻게 chargerId 별로 connect시키지..
 
@@ -62,10 +53,7 @@ public class SocketService {
     }
 
 
-
-
-
-    //@Async
+    @Async
     public void readSocketData() throws IOException {
 
         //SocketChannel schn = globalVar.globalSocket.get("schn");
@@ -206,7 +194,8 @@ public class SocketService {
 
 
         if(result_message.equals("도킹 해제 요청이 완료되었습니다.")){
-            log.debug("충전기의 모빌리티 ID를 0으로 초기회하라는 게 무슨 말???");
+            log.debug("충전기의 모빌리티 ID를 0으로 초기회");
+            globalVar.mobilityId = 0;
 
         }else{
             log.debug("docking ok");
@@ -232,8 +221,8 @@ public class SocketService {
 
 
         RespData data = RespData.builder()
-                .resultCode(0)  //요것도 나중에 enum
-                .resultMsg("대여 요청되었습니다.")
+                .result_code(0)  //요것도 나중에 enum
+                .result_message("대여 요청되었습니다.")
                 .stationId(Integer.parseInt(stationid))
                 .chargerId(Integer.parseInt(chargerid))
                 .mobilityId(Integer.parseInt(mobilityid))
@@ -247,7 +236,24 @@ public class SocketService {
 
     }
 
-
+//    @Scheduled(fixedDelay = 1000) //????안 먹힘...
+//    //@Async
+//    public void scheuledUpdate() throws JsonProcessingException {
+//
+//        RespData data = RespData.builder()
+//                .stationId(1)
+//                .chargerId(Integer.parseInt(Opcode.INIT.getCode()))
+//                .mobilityId(globalVar.mobilityId)
+//                .slotno(1)
+//                .battery(55)
+//                .build();
+//
+//        CMRespDto cmRespDto = new CMRespDto(Opcode.UPDATE, data);
+//
+//        log.info("1분마다 station 서버로 자기 정보 전송 " + cmRespDto);
+//
+//        writeSocket(cmRespDto);
+//    }
 
     public void writeSocket(CMRespDto cmRespDto) throws JsonProcessingException {
 

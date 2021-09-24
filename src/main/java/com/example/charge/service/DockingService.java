@@ -6,6 +6,8 @@ import com.example.charge.dto.Opcode;
 import com.example.charge.dto.RespData;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
@@ -26,18 +28,23 @@ public class DockingService {
 
     public ServerSocket serverSocket = null;
     public Socket socket = null;
+    JSONParser parser = new JSONParser();
+    JSONObject obj;
+
+    private GlobalVar globalVar;
 
 
     @SneakyThrows
     public DockingService(GlobalVar globalVar) {
         log.debug("docking server socket create");
         this.serverSocket = new ServerSocket(12222);
+        this.globalVar = globalVar;
     }
 
 
     @SneakyThrows
     @Async
-    public void dockingListen()  { //SocketChannel stationSchn
+    public void dockingListen() { //SocketChannel stationSchn
 
         log.debug("docking listen");
 
@@ -55,27 +62,39 @@ public class DockingService {
 
 
                 while ((strOut = reader.readLine()) != null) {
+
+                    strOut = strOut.trim();
                     System.out.println("클라이언트 메시지: " + strOut);
-                    writer.println(strOut);
-                    writer.flush();
+                    //System.out.println("glovar inject Test: " + globalVar.ip);
 
-                    //여기가 문제네.. docking 시에 아래와 같은 정보를 다 보내야겠다.
-                    Integer docked = strOut.equals("1") ? 1 : 2;
+                    //docking 시에 json으로 docked, mobilityid 전송
+                    //ClientReqDto clientReqDto = globalVar.objectMapper.readValue(strOut, ClientReqDto.class);
+                    obj = (JSONObject) parser.parse(strOut);
+
+
+                    Integer docked = Integer.parseInt(String.valueOf(obj.get("docked")));
+                    globalVar.mobilityId = Integer.parseInt(String.valueOf(obj.get("mobilityid")));
+
+                    //Integer docked = strOut.equals("1") ? 1 : 2;
                     //Integer mobilityId = docked == 1 ? 15 : 0;
+                    //this.mobilityId = 1;
 
-                    log.debug("docked: " + docked ); //+ ", mobilityId: " + mobilityId
+                    log.debug("docked: " + docked + ", mobilityId: " + globalVar.mobilityId); //
 
                     RespData respData = RespData.builder()
                             .stationId(1) //이미 알고있다고 가정
                             .chargerId(Integer.parseInt(Opcode.INIT.getCode()))
                             .docked(docked)
                             .slotno(1) //이것도 임의로
-                            .mobilityId(15)
+                            .mobilityId(globalVar.mobilityId)
                             .build();
 
                     CMRespDto cmRespDto = new CMRespDto<>(Opcode.DOCKING, respData);
                     //CMRespDto cmRespDto = new CMRespDto<>(Opcode.DOCKING, Opcode.INIT.getCode());
                     socketService.writeSocket(cmRespDto);
+
+                    writer.println(strOut);
+                    writer.flush();
                 }
 
                 log.debug("2");
@@ -84,6 +103,7 @@ public class DockingService {
 
             } catch (Exception e) {
                 log.debug("error: " + e.getMessage());
+                //충전기에 Data를 정상적으로 요청하지 않았습니다..
                 socket.close();
             }
 
@@ -92,7 +112,6 @@ public class DockingService {
 
 
     }
-
 
 
 }
