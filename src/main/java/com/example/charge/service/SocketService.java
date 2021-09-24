@@ -178,6 +178,7 @@ public class SocketService {
                     break;
 
                 case DOCKING:
+                    dockingResp(response);
                     break;
 
                 case RETURN:
@@ -192,6 +193,27 @@ public class SocketService {
         }
 
     }
+
+
+    public void dockingResp(String response) throws JsonProcessingException, ParseException {
+
+        HashMap<String, CMRespDto> hashMap = globalVar.objectMapper.readValue(response, HashMap.class);
+        log.info("도킹 여부:  " + hashMap.get("data"));
+        String parseData = globalVar.objectMapper.writeValueAsString(hashMap.get("data"));
+        log.info("도킹여부 파싱2: " + parseData);
+        obj = (JSONObject) parser.parse(parseData);
+        String result_message = String.valueOf(obj.get("result_message"));
+
+
+        if(result_message.equals("도킹 해제 요청이 완료되었습니다.")){
+            log.debug("충전기의 모빌리티 ID를 0으로 초기회하라는 게 무슨 말???");
+
+        }else{
+            log.debug("docking ok");
+        }
+
+    }
+
 
 
     public void rentalResp(String response) throws ParseException, JsonProcessingException {
@@ -235,7 +257,7 @@ public class SocketService {
         String response = globalVar.objectMapper.writeValueAsString(cmRespDto);
         log.debug(response);
 
-        globalVar.globalReqData.put(Opcode.INIT.getCode(), response); //도킹 시 가져갈 statoin, mobilityId, 기타 등등 정보들..
+        //globalVar.globalReqData.put(Opcode.INIT.getCode(), response); //도킹 시 가져갈 statoin, mobilityId, 기타 등등 정보들..
 
         ByteBuffer writBuf = ByteBuffer.allocate(10240);
 

@@ -1,9 +1,9 @@
 package com.example.charge.service;
 
 import com.example.charge.config.GlobalVar;
+import com.example.charge.dto.CMRespDto;
 import com.example.charge.dto.Opcode;
 import com.example.charge.dto.RespData;
-import com.example.charge.dto.CMRespDto;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -59,16 +59,22 @@ public class DockingService {
                     writer.println(strOut);
                     writer.flush();
 
-                    //여기가 문제네..
+                    //여기가 문제네.. docking 시에 아래와 같은 정보를 다 보내야겠다.
+                    Integer docked = strOut.equals("1") ? 1 : 2;
+                    //Integer mobilityId = docked == 1 ? 15 : 0;
+
+                    log.debug("docked: " + docked ); //+ ", mobilityId: " + mobilityId
+
                     RespData respData = RespData.builder()
-                            .stationId(3)
-                            .chargerId(12)
-                            .docked(Integer.parseInt(strOut))
-                            .slotno(1)
+                            .stationId(1) //이미 알고있다고 가정
+                            .chargerId(Integer.parseInt(Opcode.INIT.getCode()))
+                            .docked(docked)
+                            .slotno(1) //이것도 임의로
                             .mobilityId(15)
                             .build();
 
                     CMRespDto cmRespDto = new CMRespDto<>(Opcode.DOCKING, respData);
+                    //CMRespDto cmRespDto = new CMRespDto<>(Opcode.DOCKING, Opcode.INIT.getCode());
                     socketService.writeSocket(cmRespDto);
                 }
 
