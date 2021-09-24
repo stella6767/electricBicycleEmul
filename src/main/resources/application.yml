@@ -7,3 +7,4 @@ spring:
 
 ip: localhost
 socketPort: 5053
+chargerId: 1

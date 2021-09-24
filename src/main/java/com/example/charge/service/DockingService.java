@@ -1,33 +1,36 @@
 package com.example.charge.service;
 
 import com.example.charge.config.GlobalVar;
-import com.example.charge.utills.Common;
+import com.example.charge.dto.Opcode;
+import com.example.charge.dto.RespData;
+import com.example.charge.dto.CMRespDto;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import java.io.BufferedReader;
-import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.nio.ByteBuffer;
-import java.nio.channels.SocketChannel;
 
 @Slf4j
 @Service
 public class DockingService {
 
-    private GlobalVar globalVar;
+
+    @Autowired
+    private SocketService socketService; //무슨 이유에서진 RequiredArgsConstroturor가 안 먹힘..
+
     public ServerSocket serverSocket = null;
     public Socket socket = null;
+
 
     @SneakyThrows
     public DockingService(GlobalVar globalVar) {
         log.debug("docking server socket create");
-        this.globalVar = globalVar;
         this.serverSocket = new ServerSocket(12222);
     }
 
@@ -37,7 +40,9 @@ public class DockingService {
     public void dockingListen()  { //SocketChannel stationSchn
 
         log.debug("docking listen");
+
         boolean isConnected = true;
+
 
         while (isConnected) {
 
@@ -48,14 +53,23 @@ public class DockingService {
                 PrintWriter writer = new PrintWriter(socket.getOutputStream());
                 String strOut = "";
 
-                //SocketChannel schn = globalVar.globalSocket.get("schn");
 
                 while ((strOut = reader.readLine()) != null) {
                     System.out.println("클라이언트 메시지: " + strOut);
                     writer.println(strOut);
                     writer.flush();
 
-                    //writeDockingOrNot(stationSchn, strOut);
+                    //여기가 문제네..
+                    RespData respData = RespData.builder()
+                            .stationId(3)
+                            .chargerId(12)
+                            .docked(Integer.parseInt(strOut))
+                            .slotno(1)
+                            .mobilityId(15)
+                            .build();
+
+                    CMRespDto cmRespDto = new CMRespDto<>(Opcode.DOCKING, respData);
+                    socketService.writeSocket(cmRespDto);
                 }
 
                 log.debug("2");
@@ -73,23 +87,6 @@ public class DockingService {
 
     }
 
-
-    //docking 여부 staion에게 답장
-    public void writeDockingOrNot(SocketChannel schn, String response){
-
-        log.debug("station에게 buffer로 응답합니다..");
-        log.debug(response);
-        ByteBuffer writBuf = ByteBuffer.allocate(10240);
-
-        writBuf.flip();
-        writBuf = Common.str_to_bb(response);
-        try {
-            schn.write(writBuf);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        writBuf.clear();
-    }
 
 
 }

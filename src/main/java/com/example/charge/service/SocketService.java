@@ -1,7 +1,12 @@
 package com.example.charge.service;
 
 import com.example.charge.config.GlobalVar;
+import com.example.charge.dto.CMRespDto;
+import com.example.charge.dto.Opcode;
+import com.example.charge.dto.RespData;
 import com.example.charge.utills.Common;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.json.simple.JSONObject;
@@ -15,6 +20,7 @@ import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
 import java.nio.charset.Charset;
+import java.util.HashMap;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -23,6 +29,7 @@ public class SocketService {
 
     private final GlobalVar globalVar;
 
+
     JSONParser parser = new JSONParser();
     JSONObject obj;
 
@@ -30,11 +37,14 @@ public class SocketService {
     @Async
     public void test(){
         log.debug("이건 실행되나");
+
+
+
     }
 
 
     //@Async
-    public SocketChannel socketClient() throws IOException {
+    public SocketChannel socketClient() throws IOException { //여기서 어떻게 chargerId 별로 connect시키지..
 
         log.debug("socketClient create");
         SocketChannel schn = null;
@@ -51,13 +61,22 @@ public class SocketService {
 
     }
 
+
+
+
+
     //@Async
     public void readSocketData() throws IOException {
 
         //SocketChannel schn = globalVar.globalSocket.get("schn");
 
         SocketChannel schn = socketClient();
+        globalVar.globalSocket.put("schn", schn);
+        log.debug("socket 담김: " +  schn);
 
+        CMRespDto initResp = new CMRespDto<>(Opcode.INIT, Opcode.INIT.getCode());
+
+        writeSocket(initResp); //최초 자기 chargeId 전송
 
         boolean isRunning = true; // 일단 추가, socketWork 중지할지 안 중지할지
 
@@ -120,7 +139,7 @@ public class SocketService {
                         // #ETX# 단위로 루프
                         while (!result.equals("") && bEtxEnd) {
 
-                            globalVar.globalSocket.put("schn", schn);
+ //                           globalVar.globalSocket.put("schn", schn);
                             clsfyReq(result);
                             result = "";
                             bEtxEnd = false;
@@ -142,52 +161,81 @@ public class SocketService {
     }
 
 
-    public void clsfyReq(String response) {
+    public void clsfyReq(String response) { //여기서 도킹여부, 대여, 반납 요청 다 분류
 
-        log.debug("분류" + response);
+        log.debug("분류: " + response);
 
         try {
             obj = (JSONObject) parser.parse(response);
-            String opCode = String.valueOf(obj.get("opcode"));
+            String opcode = String.valueOf(obj.get("opcode"));
+            Opcode opCode = Opcode.valueOf(opcode); //enum으로 변환
+            log.info("Opcode: " + opCode);
 
             switch (opCode) {
 
-                case "rental":
+                case RENTAL:
                     rentalResp(response);
                     break;
 
-                case "return":
+                case DOCKING:
+                    break;
+
+                case RETURN:
 
                     break;
 
             }
 
 
-        } catch (ParseException e) {
+        } catch (ParseException | JsonProcessingException e) {
             e.printStackTrace();
         }
 
     }
 
 
-    public void rentalResp(String response) throws ParseException {
+    public void rentalResp(String response) throws ParseException, JsonProcessingException {
 
-        obj = (JSONObject) parser.parse(response);
-        String chargerid = String.valueOf(obj.get("chargerid"));
+
+        HashMap<String, CMRespDto> hashMap = globalVar.objectMapper.readValue(response, HashMap.class);
+        log.info("대여요청 파싱:  " + hashMap.get("data"));
+        //String parseData = String.valueOf(hashMap.get("data"));
+        String parseData = globalVar.objectMapper.writeValueAsString(hashMap.get("data"));
+        log.info("대여요청 파싱2: " + parseData);
+
+        obj = (JSONObject) parser.parse(parseData);
+        String stationid = String.valueOf(obj.get("stationid"));
         String mobilityid = String.valueOf(obj.get("mobilityid"));
+        String chargerid = String.valueOf(obj.get("chargerid"));
 
-        String rentalResponse = "대여 요청되었습니다. chargerid: " + chargerid +" 의  mobilityid: " +mobilityid +" 가 unLock";
-        writeSocket(rentalResponse);
 
+        RespData data = RespData.builder()
+                .resultCode(0)  //요것도 나중에 enum
+                .resultMsg("대여 요청되었습니다.")
+                .stationId(Integer.parseInt(stationid))
+                .chargerId(Integer.parseInt(chargerid))
+                .mobilityId(Integer.parseInt(mobilityid))
+                .build();
+
+        log.info("대여요청 파싱3: " + data);
+
+        CMRespDto parsingCmRespDto = new CMRespDto(Opcode.RENTAL, data);
+
+        writeSocket(parsingCmRespDto);
 
     }
 
 
 
-    public void writeSocket(String response){
+    public void writeSocket(CMRespDto cmRespDto) throws JsonProcessingException {
 
         log.debug("station에게 buffer로 응답합니다..");
+        globalVar.objectMapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
+
+        String response = globalVar.objectMapper.writeValueAsString(cmRespDto);
         log.debug(response);
+
+        globalVar.globalReqData.put(Opcode.INIT.getCode(), response); //도킹 시 가져갈 statoin, mobilityId, 기타 등등 정보들..
 
         ByteBuffer writBuf = ByteBuffer.allocate(10240);
 
@@ -195,6 +243,7 @@ public class SocketService {
 
         writBuf.flip();
         writBuf = Common.str_to_bb(response);
+
         try {
             schn.write(writBuf);
         } catch (IOException e) {
