@@ -223,9 +223,9 @@ public class SocketService {
         RespData data = RespData.builder()
                 .result_code(0)  //요것도 나중에 enum
                 .result_message("대여 요청되었습니다.")
-                .stationId(Integer.parseInt(stationid))
-                .chargerId(Integer.parseInt(chargerid))
-                .mobilityId(Integer.parseInt(mobilityid))
+                .stationid(Integer.parseInt(stationid))
+                .chargerid(Integer.parseInt(chargerid))
+                .mobilityid(Integer.parseInt(mobilityid))
                 .build();
 
         log.info("대여요청 파싱3: " + data);

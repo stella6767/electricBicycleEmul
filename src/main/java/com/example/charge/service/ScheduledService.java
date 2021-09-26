@@ -26,9 +26,9 @@ public class ScheduledService {
         while (true){
 
             RespData data = RespData.builder()
-                    .stationId(1)
-                    .chargerId(Integer.parseInt(Opcode.INIT.getCode()))
-                    .mobilityId(globalVar.mobilityId)
+                    .stationid(1)
+                    .chargerid(Integer.parseInt(Opcode.INIT.getCode()))
+                    .mobilityid(globalVar.mobilityId)
                     .slotno(1)
                     .battery(55)
                     .build();

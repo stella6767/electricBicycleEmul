@@ -82,11 +82,11 @@ public class DockingService {
                     log.debug("docked: " + docked + ", mobilityId: " + globalVar.mobilityId); //
 
                     RespData respData = RespData.builder()
-                            .stationId(1) //이미 알고있다고 가정
-                            .chargerId(Integer.parseInt(Opcode.INIT.getCode()))
+                            .stationid(1) //이미 알고있다고 가정
+                            .chargerid(Integer.parseInt(Opcode.INIT.getCode()))
                             .docked(docked)
                             .slotno(1) //이것도 임의로
-                            .mobilityId(globalVar.mobilityId)
+                            .mobilityid(globalVar.mobilityId)
                             .build();
 
                     CMRespDto cmRespDto = new CMRespDto<>(Opcode.DOCKING, respData);
