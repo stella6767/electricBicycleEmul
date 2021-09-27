@@ -25,6 +25,6 @@ public class GlobalVar {
     public Integer mobilityId = 0; //mobilityId는 charger랑 1대1 관계
 
     public ObjectMapper objectMapper = new ObjectMapper();
-    public ConcurrentHashMap<String, String> globalReqData = new ConcurrentHashMap<>();
+    //public ConcurrentHashMap<String, String> globalReqData = new ConcurrentHashMap<>();
     public ConcurrentHashMap<String, SocketChannel> globalSocket = new ConcurrentHashMap<>();
 }
