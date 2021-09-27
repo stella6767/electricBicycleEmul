@@ -170,7 +170,7 @@ public class SocketService {
                     break;
 
                 case RETURN:
-
+                    returnResp(response);
                     break;
 
             }
@@ -204,6 +204,42 @@ public class SocketService {
     }
 
 
+    public void returnResp(String response) throws ParseException, JsonProcessingException {
+
+        HashMap<String, CMRespDto> hashMap = globalVar.objectMapper.readValue(response, HashMap.class);
+
+        log.info("반납요청 파싱:  " + hashMap.get("data"));
+
+        //String parseData = String.valueOf(hashMap.get("data"));
+
+        String parseData = globalVar.objectMapper.writeValueAsString(hashMap.get("data"));
+        log.info("반납요청 파싱2: " + parseData);
+
+        obj = (JSONObject) parser.parse(parseData);
+        String stationid = String.valueOf(obj.get("stationid"));
+        String mobilityid = String.valueOf(obj.get("mobilityid"));
+        String chargerid = String.valueOf(obj.get("chargerid"));
+
+
+        RespData data = RespData.builder()
+                .result_code(0)  //요것도 나중에 enum
+                .result_message("반납 요청되었습니다.")
+                //.stationid(Integer.parseInt(stationid))
+                .chargerid(Integer.valueOf(Opcode.INIT.getCode()))
+                //.mobilityid(globalVar.mobilityId)
+                .build();
+
+
+        log.info("반납요청 파싱3: " + data);
+
+        CMRespDto parsingCmRespDto = new CMRespDto(Opcode.RETURN, data);
+
+        log.info("충전기 Lock");
+
+        writeSocket(parsingCmRespDto);
+
+    }
+
 
     public void rentalResp(String response) throws ParseException, JsonProcessingException {
 
@@ -231,6 +267,8 @@ public class SocketService {
         log.info("대여요청 파싱3: " + data);
 
         CMRespDto parsingCmRespDto = new CMRespDto(Opcode.RENTAL, data);
+
+        log.info("충전기 UnLock");
 
         writeSocket(parsingCmRespDto);
 
@@ -281,10 +319,6 @@ public class SocketService {
     }
 
 
-    public void returnResp(){
 
-
-
-    }
 
 }

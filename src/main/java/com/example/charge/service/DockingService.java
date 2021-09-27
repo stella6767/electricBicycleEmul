@@ -4,6 +4,7 @@ import com.example.charge.config.GlobalVar;
 import com.example.charge.dto.CMRespDto;
 import com.example.charge.dto.Opcode;
 import com.example.charge.dto.RespData;
+import com.example.charge.utills.Common;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.json.simple.JSONObject;
@@ -37,7 +38,7 @@ public class DockingService {
     @SneakyThrows
     public DockingService(GlobalVar globalVar) {
         log.debug("docking server socket create");
-        this.serverSocket = new ServerSocket(12222);
+        this.serverSocket = new ServerSocket(Common.emulPort);
         this.globalVar = globalVar;
     }
 
