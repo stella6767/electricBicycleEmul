@@ -62,7 +62,7 @@ public class SocketService {
         globalVar.globalSocket.put("schn", schn);
         log.debug("socket 담김: " +  schn);
 
-        CMRespDto initResp = new CMRespDto<>(Opcode.INIT, Opcode.INIT.getCode());
+        CMRespDto initResp = new CMRespDto<>(Opcode.INIT, globalVar.chargerid);
 
         writeSocket(initResp); //최초 자기 chargeId 전송
 
@@ -225,7 +225,7 @@ public class SocketService {
                 .result_code(0)  //요것도 나중에 enum
                 .result_message("반납 요청되었습니다.")
                 //.stationid(Integer.parseInt(stationid))
-                .chargerid(Integer.valueOf(Opcode.INIT.getCode()))
+                .chargerid(Integer.valueOf(globalVar.chargerid))
                 //.mobilityid(globalVar.mobilityId)
                 .build();
 

@@ -16,6 +16,12 @@ public class GlobalVar {
     @Value("${socketPort}")
     public Integer socketPort;
 
+    @Value("${cmd.port}")
+    public String port;
+
+    @Value("${cmd.chargerid}")
+    public String chargerid;
+
     public Integer mobilityId = 0; //mobilityId는 charger랑 1대1 관계
 
     public ObjectMapper objectMapper = new ObjectMapper();

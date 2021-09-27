@@ -27,7 +27,7 @@ public class ScheduledService {
 
             RespData data = RespData.builder()
                     .stationid(1)
-                    .chargerid(Integer.parseInt(Opcode.INIT.getCode()))
+                    .chargerid(Integer.parseInt(globalVar.chargerid))
                     .mobilityid(globalVar.mobilityId)
                     .slotno(1)
                     .battery(55)

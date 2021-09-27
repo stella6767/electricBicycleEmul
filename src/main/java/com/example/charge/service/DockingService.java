@@ -4,7 +4,6 @@ import com.example.charge.config.GlobalVar;
 import com.example.charge.dto.CMRespDto;
 import com.example.charge.dto.Opcode;
 import com.example.charge.dto.RespData;
-import com.example.charge.utills.Common;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.json.simple.JSONObject;
@@ -38,7 +37,7 @@ public class DockingService {
     @SneakyThrows
     public DockingService(GlobalVar globalVar) {
         log.debug("docking server socket create");
-        this.serverSocket = new ServerSocket(Common.emulPort);
+        this.serverSocket = new ServerSocket(Integer.parseInt(globalVar.port));//Integer.parseInt(System.getProperty("port"))
         this.globalVar = globalVar;
     }
 
@@ -84,7 +83,7 @@ public class DockingService {
 
                     RespData respData = RespData.builder()
                             .stationid(1) //이미 알고있다고 가정
-                            .chargerid(Integer.parseInt(Opcode.INIT.getCode()))
+                            .chargerid(Integer.parseInt(globalVar.chargerid))
                             .docked(docked)
                             .slotno(1) //이것도 임의로
                             .mobilityid(globalVar.mobilityId)
